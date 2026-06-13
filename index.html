@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidy Home — Weekly Laundry & Cleaning Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,600&family=DM+Sans:wght@400;500;700&family=Josefin+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- DESIGN SYSTEM & CSS VARIABLES --- */
+        :root {
+            --bg-primary: #F7F2EB;
+            --bg-secondary: #FDFBF7;
+            --accent: #D9A07C;
+            --accent-secondary: #A8B89C;
+            --text-primary: #3E342C;
+            --text-secondary: #8A7E73;
+            --border-color: #E8DFD3;
+            --success: #A8B89C;
+            --shadow: 0 4px 12px rgba(62, 52, 44, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM SCROLLBAR --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c58e69;
+        }
+
+        /* --- GLOBAL LAYOUT --- */
+        #app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- HAMBURGER MENU ICON --- */
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            background: var(--bg-primary);
+        }
+        .menu-toggle svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--text-primary);
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            z-index: 999;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 30px;
+            box-shadow: var(--shadow);
+        }
+        #sidebar.open {
+            left: 0;
+        }
+        .sidebar-header {
+            margin-top: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .sidebar-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+        .nav-item {
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            padding: 14px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .nav-item:hover svg, .nav-item.active svg {
+            stroke: var(--accent);
+        }
+        .sidebar-footer {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 16px;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+            line-height: 1.4;
+        }
+
+        /* --- MAIN CONTENT WINDOW --- */
+        #main-content {
+            flex-grow: 1;
+            padding: 40px 40px 40px 100px;
+            transition: var(--transition);
+            width: 100%;
+        }
+        #main-content.sidebar-open {
+            padding-left: 340px;
+        }
+
+        /* --- PAGE ARCHITECTURE --- */
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- TYPOGRAPHY ELEMENTS --- */
+        h2.page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        /* --- CARD STYLING --- */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(62, 52, 44, 0.12);
+        }
+
+        /* --- UI COMPONENTS & FORM CONTROLS --- */
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(217, 160, 124, 0.15);
+        }
+        
+        button.btn {
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        button.btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+        button.btn-primary:hover {
+            background-color: #c58e69;
+        }
+        button.btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        button.btn-secondary:hover {
+            background-color: var(--bg-primary);
+        }
+        button.btn-danger {
+            background-color: #d97c7c;
+            color: white;
+        }
+        button.btn-danger:hover {
+            background-color: #c46868;
+        }
+
+        /* Custom Checkbox System */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            padding-left: 28px;
+            user-select: none;
+            font-size: 14px;
+        }
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            height: 18px;
+            width: 18px;
+            background-color: transparent;
+            border: 1px solid var(--text-secondary);
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .checkbox-container:hover input ~ .checkmark {
+            border-color: var(--accent);
+        }
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: var(--success);
+            border-color: var(--success);
+            animation: scaleIn 0.2s ease;
+        }
+        .checkmark svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: white;
+            stroke-width: 3;
+            display: none;
+        }
+        .checkbox-container input:checked ~ .checkmark svg {
+            display: block;
+        }
+        .checkbox-container input:checked ~ .item-text {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+        @keyframes scaleIn {
+            0% { transform: translateY(-50%) scale(0.8); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        /* --- TOAST SYSTEM --- */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--text-primary);
+            color: var(--bg-secondary);
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            animation: slideIn 0.3s ease forwards;
+        }
+        @keyframes slideIn {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* --- SYSTEM SPECIFIC STYLES --- */
+        /* Page 1: Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .quote-box {
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .quote-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 22px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .quote-author {
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+        .widget-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .widget-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Page 2: Laundry Tracker */
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .progress-wrapper {
+            width: 100%;
+            background: var(--border-color);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: var(--accent-secondary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .laundry-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .laundry-card {
+            padding: 16px;
+        }
+        .laundry-card .day-name {
+            font-family: 'Josefin Sans', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            display: block;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+        .laundry-card input[type="text"] {
+            margin-bottom: 14px;
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+        .laundry-subtasks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .laundry-subtasks svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-secondary);
+            fill: none;
+            margin-right: 6px;
+        }
+
+        /* Page 3: Daily Cleaning Checklist */
+        .cleaning-layout {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 30px;
+        }
+        .day-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .day-tab {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Josefin Sans', sans-serif;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            transition: var(--transition);
+            text-align: left;
+        }
+        .day-tab.active, .day-tab:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .cleaning-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        .category-block {
+            margin-bottom: 25px;
+        }
+        .category-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .task-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .task-row input[type="text"] {
+            border: none;
+            background: transparent;
+            padding: 0;
+            font-size: 14px;
+            width: 80%;
+        }
+        .task-row input[type="text"]:focus {
+            box-shadow: none;
+            border: none;
+        }
+        .btn-delete {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+        .btn-delete:hover {
+            opacity: 1;
+        }
+        .btn-delete svg {
+            width: 14px;
+            height: 14px;
+            stroke: #d97c7c;
+            fill: none;
+        }
+        .add-task-container {
+            display: flex;
+            gap: 10px;
+        }
+        .progress-ring-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: fit-content;
+            position: sticky;
+            top: 40px;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        .progress-percentage {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* Page 4: Deep Cleaning Tracker */
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .deep-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .deep-table th, .deep-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .deep-table th {
+            font-family: 'Josefin Sans', sans-serif;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .tag-weekly { background: #e2ebd5; color: #526640; }
+        .tag-monthly { background: #f7e6db; color: #945831; }
+        .tag-quarterly { background: #e8e3dd; color: #5c534a; }
+        .tag-seasonal { background: #dee9eb; color: #3a5c63; }
+
+        /* Page 5: Stain Removal Guide */
+        .stain-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .stain-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+        .stain-card h3 svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent);
+        }
+        .stain-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Page 6: Supply & Shopping List */
+        .supply-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .inventory-list, .shopping-list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .inventory-row, .shopping-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .inventory-row select {
+            width: 100px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* Page 7: Monthly Reflection */
+        .reflection-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .wins-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .win-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .win-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-style: italic;
+            color: var(--accent);
+        }
+        .journal-container textarea {
+            min-height: 300px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            line-height: 1.5;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            background-image: linear-gradient(rgba(232, 223, 211, 0.5) 1px, transparent 1px);
+            background-size: 100% 30px;
+            border-radius: 12px;
+        }
+
+        /* --- RESPONSIVE OVERRIDES --- */
+        @media(max-width: 1024px) {
+            .laundry-grid { grid-template-columns: repeat(4, 1fr); }
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media(max-width: 768px) {
+            #sidebar { width: 100%; left: -100%; }
+            #main-content { padding-left: 20px; padding-right: 20px; padding-top: 80px;}
+            #main-content.sidebar-open { padding-left: 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .dashboard-widgets { grid-template-columns: 1fr; }
+            .laundry-grid { grid-template-columns: repeat(2, 1fr); }
+            .cleaning-layout { grid-template-columns: 1fr; }
+            .cleaning-main { grid-template-columns: 1fr; }
+            .day-tabs { flex-direction: row; overflow-x: auto; padding-bottom: 10px; }
+            .day-tab { white-space: nowrap; }
+            .progress-ring-box { position: static; order: -1; margin-bottom: 20px; }
+            .stain-grid { grid-template-columns: 1fr; }
+            .supply-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div class="menu-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1>Tidy Home</h1>
+        </div>
+        <div class="sidebar-nav">
+            <a class="nav-item active" onclick="switchPage('dashboard')">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Dashboard
+            </a>
+            <a class="nav-item" onclick="switchPage('laundry')">
+                <svg viewBox="0 0 24 24"><path d="M19.36 2.72L20.78 4.14 15.06 9.86l-1.41-1.42 5.71-5.72zM5.86 4.14L7.28 2.72l5.72 5.72-1.42 1.42L5.86 4.14zM19 8l-2 2V8H7v2L5 8H3v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8h-2zm-7 11c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg> Laundry
+            </a>
+            <a class="nav-item" onclick="switchPage('cleaning')">
+                <svg viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg> Daily Cleaning
+            </a>
+            <a class="nav-item" onclick="switchPage('deep')">
+                <svg viewBox="0 0 24 24"><path d="M7 15h7v2H7zm0-4h10v2H7zm0-4h10v2H7zm12-4h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg> Deep Cleaning
+            </a>
+            <a class="nav-item" onclick="switchPage('stains')">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 12 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> Stain Guide
+            </a>
+            <a class="nav-item" onclick="switchPage('supplies')">
+                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg> Supplies & Shop
+            </a>
+            <a class="nav-item" onclick="switchPage('reflection')">
+                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Reflection
+            </a>
+        </div>
+        <div class="sidebar-footer" id="sidebar-quote">
+            "A warm, clean home is a sanctuary for the soul."
+        </div>
+    </div>
+
+    <div id="main-content">
+
+        <div id="page-dashboard" class="page active">
+            <h2 class="page-title">Welcome to Your Tidy Home</h2>
+            <div class="page-subtitle" id="dashboard-date">Monday, June 15</div>
+            
+            <div class="dashboard-grid">
+                <div class="card stat-card">
+                    <div class="stat-value" id="stat-completed-tasks">0</div>
+                    <div class="stat-label">Tasks Done Today</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-value" id="stat-weekly-progress">0%</div>
+                    <div class="stat-label">Weekly Progress</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-value" id="stat-laundry-loads">0</div>
+                    <div class="stat-label">Laundry Loads Fixed</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-label">Current Streak Days</div>
+                </div>
+            </div>
+
+            <div class="dashboard-widgets">
+                <div class="card">
+                    <h3 style="font-family:'Playfair Display', serif; font-size:20px; margin-bottom:10px;">Today's Focus Tasks</h3>
+                    <div class="widget-list" id="focus-widget-list">
+                        </div>
+                </div>
+                <div class="card quote-box">
+                    <div class="quote-text" id="daily-quote">"The objective of cleaning is not just to clean, but to feel happiness inhabited within that environment."</div>
+                    <div class="quote-author" id="daily-quote-author">Marie Kondo</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-laundry" class="page">
+            <div class="progress-header">
+                <div>
+                    <h2 class="page-title">Weekly Laundry Plan</h2>
+                    <div class="page-subtitle">Organize, wash, dry, and put away</div>
+                </div>
+                <button class="btn btn-secondary" onclick="resetLaundryWeek()">Reset Week</button>
+            </div>
+            
+            <div class="progress-wrapper">
+                <div class="progress-bar" id="laundry-progress-bar"></div>
+            </div>
+
+            <div class="laundry-grid" id="laundry-days-grid">
+                </div>
+        </div>
+
+        <div id="page-cleaning" class="page">
+            <h2 class="page-title">Daily Operations Checklist</h2>
+            <div class="page-subtitle">Structured checklists for structured living</div>
+            
+            <div class="cleaning-layout">
+                <div class="day-tabs" id="cleaning-day-tabs">
+                    </div>
+                <div class="cleaning-main">
+                    <div id="cleaning-tasks-container">
+                        </div>
+                    <div class="card progress-ring-box">
+                        <svg class="progress-ring" width="160" height="160">
+                            <circle class="progress-ring__circle" stroke="#E8DFD3" stroke-width="8" fill="transparent" r="70" cx="80" cy="80"/>
+                            <circle class="progress-ring__circle" id="cleaning-progress-circle" stroke="#A8B89C" stroke-width="8" fill="transparent" r="70" cx="80" cy="80" stroke-dasharray="439.82 439.82" stroke-dashoffset="439.82"/>
+                        </svg>
+                        <div class="progress-percentage" id="cleaning-progress-percent">0%</div>
+                        <div class="stat-label" style="margin-top: 15px;">Day Completion</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-deep" class="page">
+            <div class="filter-header">
+                <div>
+                    <h2 class="page-title">Deep Cleaning Logs</h2>
+                    <div class="page-subtitle">Track periodic maintenance and seasonal tasks</div>
+                </div>
+                <div class="filter-btns">
+                    <button class="btn btn-secondary" onclick="filterDeepTasks('all')">All</button>
+                    <button class="btn btn-secondary" onclick="filterDeepTasks('weekly')">Weekly</button>
+                    <button class="btn btn-secondary" onclick="filterDeepTasks('monthly')">Monthly</button>
+                    <button class="btn btn-secondary" onclick="filterDeepTasks('quarterly')">Quarterly</button>
+                    <button class="btn btn-secondary" onclick="filterDeepTasks('seasonal')">Seasonal</button>
+                </div>
+            </div>
+
+            <div class="card" style="overflow-x: auto; padding:0;">
+                <table class="deep-table">
+                    <thead>
+                        <tr>
+                            <th>Task Architecture</th>
+                            <th>Frequency</th>
+                            <th>Last Run Date</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deep-tasks-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="page-stains" class="page">
+            <h2 class="page-title">Stain Removal Index</h2>
+            <div class="page-subtitle">Quick reference documentation for fabric care</div>
+            
+            <div class="stain-grid" id="stain-guide-grid">
+                </div>
+        </div>
+
+        <div id="page-supplies" class="page">
+            <h2 class="page-title">Supply Logistics & Procurement</h2>
+            <div class="page-subtitle">Monitor asset levels and compile active grocery targets</div>
+
+            <div class="supply-grid">
+                <div class="card">
+                    <h3 style="font-family:'Playfair Display', serif; font-size:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Stock Control Matrix</h3>
+                    <div class="inventory-list" id="inventory-list-container">
+                        </div>
+                </div>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                        <h3 style="font-family:'Playfair Display', serif; font-size:20px;">Procurement Queue</h3>
+                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="clearCheckedShopping()">Clear Completed</button>
+                    </div>
+                    <div class="shopping-list-items" id="shopping-list-container">
+                        </div>
+                    <div class="add-task-container" style="margin-top: 20px;">
+                        <input type="text" id="new-shopping-item-input" placeholder="Add requested resource...">
+                        <button class="btn btn-primary" onclick="addCustomShoppingItem()">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-reflection" class="page">
+            <h2 class="page-title">Monthly Review & Insights</h2>
+            <div class="page-subtitle">Document environment milestones and operational thoughts</div>
+            
+            <div class="card reflection-layout">
+                <div class="wins-container">
+                    <h3 style="font-family:'Playfair Display', serif; font-size:20px; margin-bottom:5px;">Top Three Household Successes</h3>
+                    <div class="win-row">
+                        <span class="win-number">1.</span>
+                        <input type="text" id="win-input-1" class="win-input" placeholder="Achieved complete weekly streak...">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-number">2.</span>
+                        <input type="text" id="win-input-2" class="win-input" placeholder="Organized pantry asset matrix...">
+                    </div>
+                    <div class="win-row">
+                        <span class="win-number">3.</span>
+                        <input type="text" id="win-input-3" class="win-input" placeholder="Deep cleaned baseline operations...">
+                    </div>
+                </div>
+
+                <div class="journal-container">
+                    <h3 style="font-family:'Playfair Display', serif; font-size:20px; margin-bottom:10px;">Operational Logs & Freeform Thoughts</h3>
+                    <textarea id="reflection-journal" placeholder="Begin writing here..."></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    /* --- SYSTEM STATE SEED / LOCALSTORAGE CORE --- */
+    const STORAGE_KEY = "tidyHomePlannerData";
+    
+    let state = {
+        currentDayIndex: 0, // Monday default
+        streak: 5,
+        laundry: {},
+        cleaning: {},
+        deepCleaning: [],
+        inventory: {},
+        shopping: [],
+        wins: ["", "", ""],
+        journal: ""
+    };
+
+    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    
+    const cleaningDefaults = {
+        Kitchen: ["Wipe counters & island", "Load/unload dishwasher", "Clean kitchen sink", "Sweep and spot mop floors"],
+        Bathroom: ["Wipe mirror and faucet", "Sanitize toilet bowl", "Wipe down shower edge", "Empty waste container"],
+        "Living Spaces": ["Tidy surface clutter", "Fluff accent pillows", "Quick dust main surfaces", "Vacuum paths"]
+    };
+
+    const defaultDeepTasks = [
+        { id: 1, name: "Deep clean baking oven interior", freq: "monthly", lastDone: "2026-05-12" },
+        { id: 2, name: "Wash glass interior & exterior windows", freq: "quarterly", lastDone: "2026-04-10" },
+        { id: 3, name: "Declutter main dressing closet", freq: "seasonal", lastDone: "2026-03-20" },
+        { id: 4, name: "Clean layout behind heavy appliances", freq: "seasonal", lastDone: "2026-01-15" },
+        { id: 5, name: "Launder heavy window curtains", freq: "seasonal", lastDone: "2025-12-10" },
+        { id: 6, name: "Deep extraction carpet cleaning", freq: "quarterly", lastDone: "2026-04-02" },
+        { id: 7, name: "Audit and organize dry goods pantry", freq: "monthly", lastDone: "2026-05-28" },
+        { id: 8, name: "Wipe down wall baseline boards", freq: "monthly", lastDone: "2026-06-01" },
+        { id: 9, name: "Sanitize sanitation exterior trash bins", freq: "weekly", lastDone: "2026-06-08" },
+        { id: 10, name: "Dust high hanging light fixtures", freq: "monthly", lastDone: "2026-05-20" }
+    ];
+
+    const defaultInventory = [
+        { name: "Premium Detergent Sheets", status: "Full" },
+        { name: "Fabric Refreshing Liquids", status: "Half" },
+        { name: "Concentrated Dish Soap", status: "Low" },
+        { name: "Multi-surface Cleaning Spray", status: "Full" },
+        { name: "Biodegradable Scrub Sponges", status: "Empty" },
+        { name: "Heavy Duty Trash Liners", status: "Half" },
+        { name: "Recycled Paper Towels", status: "Low" }
+    ];
+
+    const stainData = [
+        { name: "Blood", instructions: "Flush instantly with direct cold water. Apply heavy hydrogen peroxide or enzymatic detergent directly, tap lightly, then wash cool." },
+        { name: "Grease / Organic Oils", instructions: "Blot excess fluid. Cover with clear dish soap completely, let stand for 10 minutes, scrub delicately, then rinse warm." },
+        { name: "Red Wine", instructions: "Towel blot fluid. Flood stain structure with dry table salt to absorb moisture. Flush out with boiling water or club soda." },
+        { name: "Grass Stains", instructions: "Pre-treat using regular rubbing alcohol to shatter pigment bonds. Apply heavy enzyme detergent directly, then scrub clean." },
+        { name: "Industrial Ink", instructions: "Place clean paper towel underneath. Sponge area with standard isopropyl alcohol or hairspray. Wash line immediately." },
+        { name: "Coffee & Tea", instructions: "Run immediate cold water through item back. Pre-treat item using mixed liquid dish detergent and white distilled vinegar." },
+        { name: "Cosmetics / Makeup", instructions: "Dampen target spot lightly. Rub bar soap or clear dish detergent directly onto makeup lines. Launder normally." },
+        { name: "Organic Sweat Stains", instructions: "Create saturation paste with baking soda and water. Rub deep into yellow spots, sit 30 mins, rinse out with warm vinegar." },
+        { name: "Processed Chocolate", instructions: "Scrape dry flakes away. Soak thoroughly in cold water mixed with heavy enzyme cleaner. Treat lines with dish soap." },
+        { name: "Earthy Mud", instructions: "Allow mud structure to fully dry. Brush solid crust away cleanly. Pre-treat line marks using dynamic laundry soap." },
+        { name: "Tomato Concentrates", instructions: "Sponge surface completely with pure white vinegar. Flush using cold water thoroughly, then machine launder clean." },
+        { name: "Wax Crayon Marks", instructions: "Place stain structure between clean brown paper bag scraps. Run a hot iron over target area to transfer wax out." }
+    ];
+
+    const structuralQuotes = [
+        { text: "Have nothing in your houses that you do not know to be useful or believe to be beautiful.", author: "William Morris" },
+        { text: "The objective of cleaning is not just to clean, but to feel happiness inhabited within that environment.", author: "Marie Kondo" },
+        { text: "Clutter is nothing more than deferred decisions.", author: "Barbara Hemphill" },
+        { text: "A room is like a poem: its architecture sets structural parameters, but content establishes meaning.", author: "Li Edelkoort" },
+        { text: "The beauty of home organization is that it transforms your interior ecosystem into calm paths.", author: "Unknown" }
+    ];
+
+    /* --- DEBOUNCE UTILITY --- */
+    function debounce(func, timeout = 500) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
+    /* --- MAIN INIT ENGINE --- */
+    window.addEventListener("DOMContentLoaded", () => {
+        initLocalStorage();
+        renderSystemDate();
+        renderDashboardWidgets();
+        renderLaundryPage();
+        renderCleaningTabs();
+        renderCleaningTasks();
+        renderDeepCleaningTable();
+        renderStainGuide();
+        renderInventoryPage();
+        renderShoppingList();
+        renderReflectionData();
+        setupGlobalEventListeners();
+        calculateGlobalMetrics();
+    });
+
+    function initLocalStorage() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try {
+                state = JSON.parse(raw);
+                if (!state.wins) state.wins = ["", "", ""];
+                if (!state.journal) state.journal = "";
+            } catch (e) {
+                buildDefaultState();
+            }
+        } else {
+            buildDefaultState();
+        }
+    }
+
+    function buildDefaultState() {
+        state.streak = 4;
+        state.journal = "";
+        state.wins = ["", "", ""];
+        
+        // Seed laundry
+        daysOfWeek.forEach(day => {
+            state.laundry[day] = {
+                loadName: day === "Monday" ? "Whites" : day === "Thursday" ? "Bed Linens" : "",
+                wash: false, dry: false, fold: false
+            };
+        });
+
+        // Seed daily cleaning
+        daysOfWeek.forEach(day => {
+            state.cleaning[day] = {};
+            for (const [cat, tasks] of Object.entries(cleaningDefaults)) {
+                state.cleaning[day][cat] = tasks.map((t, idx) => ({ id: idx, text: t, done: false }));
+            }
+        });
+
+        // Seed Deep Clean
+        state.deepCleaning = [...defaultDeepTasks];
+
+        // Seed Inventory
+        state.inventory = {};
+        defaultInventory.forEach(item => {
+            state.inventory[item.name] = item.status;
+        });
+
+        // Seed Shopping
+        state.shopping = [
+            { id: 101, name: "Microfiber window clothes", checked: false },
+            { name: "Concentrated Dish Soap", checked: false, automated: true },
+            { name: "Biodegradable Scrub Sponges", checked: false, automated: true },
+            { name: "Recycled Paper Towels", checked: false, automated: true }
+        ];
+
+        saveStateDirectly();
+    }
+
+    function saveStateDirectly() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    const triggerAutoSave = debounce(() => {
+        saveStateDirectly();
+        calculateGlobalMetrics();
+    }, 500);
+
+    /* --- SYSTEM GLOBAL VIEW ACTIONS --- */
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const main = document.getElementById("main-content");
+        sidebar.classList.toggle("open");
+        if (window.innerWidth > 768) {
+            main.classList.toggle("sidebar-open");
+        }
+    }
+
+    function switchPage(pageId) {
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+        
+        const selectedPage = document.getElementById(`page-${pageId}`);
+        if(selectedPage) selectedPage.classList.add("active");
+        
+        // Find corresponding element tag safely
+        const targetNav = Array.from(document.querySelectorAll(".nav-item")).find(n => n.outerHTML.includes(`switchPage('${pageId}')`));
+        if (targetNav) targetNav.classList.add("active");
+
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.remove("open");
+        }
+        
+        // Contextual operational updates
+        if(pageId === 'dashboard') {
+            renderDashboardWidgets();
+        }
+        calculateGlobalMetrics();
+    }
+
+    function showToast(message) {
+        const container = document.getElementById("toast-container");
+        const el = document.createElement("div");
+        el.className = "toast";
+        el.innerHTML = `
+            <svg style="width:16px;height:16px;fill:#A8B89C;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            <span>${message}</span>
+        `;
+        container.appendChild(el);
+        setTimeout(() => {
+            el.style.animation = "none";
+            el.remove();
+        }, 2500);
+    }
+
+    /* --- PAGE INTERFACES RUNNERS --- */
+
+    // PAGE 1: DASHBOARD INFRASTRUCTURE
+    function renderSystemDate() {
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        const now = new Date();
+        document.getElementById("dashboard-date").innerText = now.toLocaleDateString('en-US', options);
+        
+        // Pick static rotational quote based on calendar date index
+        const quoteIdx = now.getDate() % structuralQuotes.length;
+        document.getElementById("daily-quote").innerText = `"${structuralQuotes[quoteIdx].text}"`;
+        document.getElementById("daily-quote-author").innerText = structuralQuotes[quoteIdx].author;
+        document.getElementById("sidebar-quote").innerText = `"${structuralQuotes[quoteIdx].text}"`;
+    }
+
+    function renderDashboardWidgets() {
+        const list = document.getElementById("focus-widget-list");
+        list.innerHTML = "";
+        
+        const now = new Date();
+        let dayStr = daysOfWeek[now.getDay() === 0 ? 6 : now.getDay() - 1]; // map mon-sun
+        
+        let foundUncompleted = [];
+        const categories = state.cleaning[dayStr] || {};
+        
+        for(const [catName, tasks] of Object.entries(categories)) {
+            tasks.forEach(t => {
+                if(!t.done) foundUncompleted.push({ ...t, catName });
+            });
+        }
+
+        if(foundUncompleted.length === 0) {
+            list.innerHTML = `<div class="widget-item" style="color:var(--text-secondary);">All standard operation targets clear for today!</div>`;
+            return;
+        }
+
+        // Output top 3 tracking focuses
+        foundUncompleted.slice(0, 3).forEach(task => {
+            const row = document.createElement("div");
+            row.className = "widget-item";
+            row.innerHTML = `
+                <div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--accent);"></div>
+                <span style="font-size: 13px; font-weight:500; color:var(--text-secondary); min-width:70px;">[${task.catName}]</span>
+                <span style="font-size: 14px;">${task.text}</span>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function calculateGlobalMetrics() {
+        // 1. Completed Tasks Today
+        const now = new Date();
+        let dayStr = daysOfWeek[now.getDay() === 0 ? 6 : now.getDay() - 1];
+        let completedToday = 0;
+        
+        if(state.cleaning[dayStr]) {
+            for(const [cat, tasks] of Object.entries(state.cleaning[dayStr])) {
+                tasks.forEach(t => { if(t.done) completedToday++; });
+            }
+        }
+        document.getElementById("stat-completed-tasks").innerText = completedToday;
+
+        // 2. Weekly progress tracking across standard operational matrix
+        let totalCleaningItems = 0;
+        let checkedCleaningItems = 0;
+        daysOfWeek.forEach(d => {
+            if(state.cleaning[d]) {
+                for(const [cat, tasks] of Object.entries(state.cleaning[d])) {
+                    tasks.forEach(t => {
+                        totalCleaningItems++;
+                        if(t.done) checkedCleaningItems++;
+                    });
+                }
+            }
+        });
+
+        const cleaningProgress = totalCleaningItems > 0 ? (checkedCleaningItems / totalCleaningItems) : 0;
+        const totalProgressPercent = Math.round(cleaningProgress * 100);
+        document.getElementById("stat-weekly-progress").innerText = `${totalProgressPercent}%`;
+
+        // 3. Laundry Load metric count
+        let totalLaundryFixed = 0;
+        daysOfWeek.forEach(d => {
+            const ld = state.laundry[d];
+            if(ld && ld.loadName.trim() !== "") {
+                if(ld.wash && ld.dry && ld.fold) totalLaundryFixed++;
+            }
+        });
+        document.getElementById("stat-laundry-loads").innerText = totalLaundryFixed;
+
+        // 4. Streak
+        document.getElementById("stat-streak").innerText = state.streak;
+
+        // Update laundry completion processing bar
+        let totalLaundryTasks = 7 * 3; 
+        let doneLaundryTasks = 0;
+        daysOfWeek.forEach(d => {
+            const ld = state.laundry[d];
+            if(ld) {
+                if(ld.wash) doneLaundryTasks++;
+                if(ld.dry) doneLaundryTasks++;
+                if(ld.fold) doneLaundryTasks++;
+            }
+        });
+        const laundryPercent = Math.round((doneLaundryTasks / totalLaundryTasks) * 100);
+        const pBar = document.getElementById("laundry-progress-bar");
+        if(pBar) pBar.style.width = `${laundryPercent}%`;
+
+        // Update active dynamic progress ring
+        updateCleaningProgressRing(dayStr);
+    }
+
+    // PAGE 2: WEEKLY LAUNDRY INTERFACES
+    function renderLaundryPage() {
+        const grid = document.getElementById("laundry-days-grid");
+        grid.innerHTML = "";
+
+        daysOfWeek.forEach(day => {
+            const data = state.laundry[day];
+            const card = document.createElement("div");
+            card.className = "card laundry-card";
+            card.innerHTML = `
+                <span class="day-name">${day}</span>
+                <input type="text" id="laundry-input-${day}" value="${data.loadName}" placeholder="Target e.g. Darks" oninput="updateLaundryName('${day}', this.value)">
+                <div class="laundry-subtasks">
+                    <label class="checkbox-container">
+                        <input type="checkbox" ${data.wash ? 'checked':''} onchange="updateLaundryState('${day}', 'wash', this.checked)">
+                        <span class="checkmark"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                        <span class="item-text" style="display:flex; align-items:center;">
+                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 16c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> Wash
+                        </span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" ${data.dry ? 'checked':''} onchange="updateLaundryState('${day}', 'dry', this.checked)">
+                        <span class="checkmark"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                        <span class="item-text" style="display:flex; align-items:center;">
+                            <svg viewBox="0 0 24 24"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c4.42 0 8-3.58 8-8s-3.58-8-8-8-8 3.58-8 8 3.58 8 8 8zm0-12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg> Dry
+                        </span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" ${data.fold ? 'checked':''} onchange="updateLaundryState('${day}', 'fold', this.checked)">
+                        <span class="checkmark"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                        <span class="item-text" style="display:flex; align-items:center;">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L1 7l11 5 11-5L12 2zm0 13l-9-4.09v2.42L12 18l9-4.67v-2.42L12 15z"/></svg> Fold
+                        </span>
+                    </label>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function updateLaundryName(day, val) {
+        state.laundry[day].loadName = val;
+        triggerAutoSave();
+    }
+
+    function updateLaundryState(day, phase, checked) {
+        state.laundry[day][phase] = checked;
+        if(checked) showToast(`Laundry ${phase} checked for ${day}`);
+        triggerAutoSave();
+    }
+
+    function resetLaundryWeek() {
+        if(confirm("Are you sure you want to initialize a total reset on this laundry sequence?")) {
+            daysOfWeek.forEach(day => {
+                state.laundry[day] = { loadName: "", wash: false, dry: false, fold: false };
+            });
+            saveStateDirectly();
+            renderLaundryPage();
+            calculateGlobalMetrics();
+            showToast("Laundry tracking schedule reset initialized.");
+        }
+    }
+
+    // PAGE 3: DAILY OPERATIONS CHECKLIST
+    function renderCleaningTabs() {
+        const container = document.getElementById("cleaning-day-tabs");
+        container.innerHTML = "";
+        daysOfWeek.forEach((day, idx) => {
+            const btn = document.createElement("button");
+            btn.className = `day-tab ${idx === state.currentDayIndex ? 'active':''}`;
+            btn.innerText = day;
+            btn.onclick = () => {
+                state.currentDayIndex = idx;
+                document.querySelectorAll(".day-tab").forEach(t => t.classList.remove("active"));
+                btn.classList.add("active");
+                renderCleaningTasks();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function renderCleaningTasks() {
+        const targetDay = daysOfWeek[state.currentDayIndex];
+        const container = document.getElementById("cleaning-tasks-container");
+        container.innerHTML = "";
+
+        const data = state.cleaning[targetDay] || {};
+
+        for (const [category, tasks] of Object.entries(data)) {
+            const block = document.createElement("div");
+            block.className = "card category-block";
+            block.innerHTML = `
+                <div class="category-title">${category}</div>
+                <div class="task-list" id="task-list-${category}"></div>
+                <div class="add-task-container">
+                    <input type="text" id="add-input-${category}" placeholder="Add explicit dynamic target...">
+                    <button class="btn btn-primary" onclick="addCustomCleaningTask('${category}')">Add</button>
+                </div>
+            `;
+            container.appendChild(block);
+
+            const listEl = document.getElementById(`task-list-${category}`);
+            tasks.forEach(task => {
+                const row = document.createElement("div");
+                row.className = "task-row";
+                row.innerHTML = `
+                    <label class="checkbox-container">
+                        <input type="checkbox" ${task.done ? 'checked':''} onchange="toggleCleaningTask('${category}', ${task.id}, this.checked)">
+                        <span class="checkmark"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                        <input type="text" value="${task.text}" oninput="editCleaningTaskText('${category}', ${task.id}, this.value)" style="width: auto; max-width:80%;">
+                    </label>
+                    <button class="btn-delete" onclick="deleteCleaningTask('${category}', ${task.id})">
+                        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+        updateCleaningProgressRing(targetDay);
+    }
+
+    function toggleCleaningTask(category, id, isChecked) {
+        const day = daysOfWeek[state.currentDayIndex];
+        const task = state.cleaning[day][category].find(t => t.id === id);
+        if(task) {
+            task.done = isChecked;
+            if(isChecked) showToast("Task operational target completed");
+        }
+        triggerAutoSave();
+    }
+
+    function editCleaningTaskText(category, id, newText) {
+        const day = daysOfWeek[state.currentDayIndex];
+        const task = state.cleaning[day][category].find(t => t.id === id);
+        if(task) task.text = newText;
+        triggerAutoSave();
+    }
+
+    function addCustomCleaningTask(category) {
+        const day = daysOfWeek[state.currentDayIndex];
+        const input = document.getElementById(`add-input-${category}`);
+        const text = input.value.trim();
+        if(!text) return;
+
+        const newTask = {
+            id: Date.now(),
+            text: text,
+            done: false
+        };
+
+        state.cleaning[day][category].push(newTask);
+        input.value = "";
+        saveStateDirectly();
+        renderCleaningTasks();
+        calculateGlobalMetrics();
+        showToast("Custom baseline objective added.");
+    }
+
+    function deleteCleaningTask(category, id) {
+        const day = daysOfWeek[state.currentDayIndex];
+        state.cleaning[day][category] = state.cleaning[day][category].filter(t => t.id !== id);
+        saveStateDirectly();
+        renderCleaningTasks();
+        calculateGlobalMetrics();
+        showToast("Task completely excised from log.");
+    }
+
+    function updateCleaningProgressRing(dayStr) {
+        const data = state.cleaning[dayStr] || {};
+        let total = 0;
+        let done = 0;
+
+        for (const [cat, tasks] of Object.entries(data)) {
+            tasks.forEach(t => {
+                total++;
+                if(t.done) done++;
+            });
+        }
+
+        const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+        
+        const circle = document.getElementById("cleaning-progress-circle");
+        if(circle) {
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+        
+        const txt = document.getElementById("cleaning-progress-percent");
+        if(txt) txt.innerText = `${percentage}%`;
+    }
+
+    // PAGE 4: DEEP CLEANING TRACKER
+    let activeDeepFilter = "all";
+    function renderDeepCleaningTable() {
+        const tbody = document.getElementById("deep-tasks-table-body");
+        tbody.innerHTML = "";
+
+        state.deepCleaning.forEach(task => {
+            if(activeDeepFilter !== "all" && task.freq !== activeDeepFilter) return;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td style="font-size:14px; font-weight:500;">${task.name}</td>
+                <td><span class="tag tag-${task.freq}">${task.freq}</span></td>
+                <td>
+                    <input type="date" value="${task.lastDone}" onchange="updateDeepTaskDate(${task.id}, this.value)" style="border:1px solid var(--border-color); border-radius:4px; font-size:12px; padding:4px 6px;">
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn btn-primary" style="padding:6px 12px; font-size:11px;" onclick="markDeepTaskDoneNow(${task.id})">Complete Today</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function filterDeepTasks(freq) {
+        activeDeepFilter = freq;
+        renderDeepCleaningTable();
+    }
+
+    function updateDeepTaskDate(id, dateStr) {
+        const task = state.deepCleaning.find(t => t.id === id);
+        if(task) task.lastDone = dateStr;
+        triggerAutoSave();
+    }
+
+    function markDeepTaskDoneNow(id) {
+        const task = state.deepCleaning.find(t => t.id === id);
+        if(task) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            task.lastDone = todayStr;
+            saveStateDirectly();
+            renderDeepCleaningTable();
+            showToast("Deep cleaning lifecycle variable synchronized.");
+        }
+    }
+
+    // PAGE 5: REFERENCE CATALOGUE
+    function renderStainGuide() {
+        const grid = document.getElementById("stain-guide-grid");
+        grid.innerHTML = "";
+        stainData.forEach(stain => {
+            const card = document.createElement("div");
+            card.className = "card stain-card";
+            card.innerHTML = `
+                <h3>
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zM12 15c-.55 0-1-.45-1-1V8c0-.55.45-1 1-1s1.45.45 1.45 1v6c0 .55-.45 1-1 1z"/></svg>
+                    ${stain.name} Stain Care
+                </h3>
+                <p>${stain.instructions}</p>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // PAGE 6: INVENTORY & LOGISTICS CONTROL
+    function renderInventoryPage() {
+        const container = document.getElementById("inventory-list-container");
+        container.innerHTML = "";
+
+        for(const [name, status] of Object.entries(state.inventory)) {
+            const row = document.createElement("div");
+            row.className = "inventory-row";
+            row.innerHTML = `
+                <span style="font-size:14px; font-weight:500;">${name}</span>
+                <select onchange="updateInventoryStatus('${name}', this.value)">
+                    <option value="Full" ${status === 'Full'?'selected':''}>Full</option>
+                    <option value="Half" ${status === 'Half'?'selected':''}>Half</option>
+                    <option value="Low" ${status === 'Low'?'selected':''}>Low</option>
+                    <option value="Empty" ${status === 'Empty'?'selected':''}>Empty</option>
+                </select>
+            `;
+            container.appendChild(row);
+        }
+    }
+
+    function updateInventoryStatus(name, newStatus) {
+        state.inventory[name] = newStatus;
+        
+        // Auto procurement queue synchronization rules
+        if(newStatus === "Low" || newStatus === "Empty") {
+            const exists = state.shopping.some(item => item.name.toLowerCase() === name.toLowerCase());
+            if(!exists) {
+                state.shopping.push({ id: Date.now(), name: name, checked: false, automated: true });
+                renderShoppingList();
+                showToast(`Asset critically depleted. Added ${name} to Shopping.`);
+            }
+        }
+        triggerAutoSave();
+    }
+
+    function renderShoppingList() {
+        const container = document.getElementById("shopping-list-container");
+        container.innerHTML = "";
+
+        if(state.shopping.length === 0) {
+            container.innerHTML = `<div style="color:var(--text-secondary); font-size:13px; text-align:center; padding: 20px 0;">No resources currently queued for purchase.</div>`;
+            return;
+        }
+
+        state.shopping.forEach((item, index) => {
+            const row = document.createElement("div");
+            row.className = "shopping-row";
+            row.innerHTML = `
+                <label class="checkbox-container">
+                    <input type="checkbox" ${item.checked ? 'checked':''} onchange="toggleShoppingItem(${index}, this.checked)">
+                    <span class="checkmark"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>
+                    <span class="item-text" style="font-size:14px;">${item.name} ${item.automated ? '<i style="font-size:11px; color:var(--accent);">[Auto]</i>':''}</span>
+                </label>
+                <button class="btn-delete" onclick="deleteShoppingItem(${index})">
+                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function toggleShoppingItem(idx, checked) {
+        state.shopping[idx].checked = checked;
+        triggerAutoSave();
+    }
+
+    function addCustomShoppingItem() {
+        const input = document.getElementById("new-shopping-item-input");
+        const val = input.value.trim();
+        if(!val) return;
+
+        state.shopping.push({
+            id: Date.now(),
+            name: val,
+            checked: false,
+            automated: false
+        });
+        input.value = "";
+        saveStateDirectly();
+        renderShoppingList();
+        showToast("Procurement item structuralized.");
+    }
+
+    function deleteShoppingItem(idx) {
+        state.shopping.splice(idx, 1);
+        saveStateDirectly();
+        renderShoppingList();
+        showToast("Item deleted from queue.");
+    }
+
+    function clearCheckedShopping() {
+        state.shopping = state.shopping.filter(item => !item.checked);
+        saveStateDirectly();
+        renderShoppingList();
+        showToast("Cleared active cleared dependencies.");
+    }
+
+    // PAGE 7: JOURNAL CONTEXTS
+    function renderReflectionData() {
+        document.getElementById("win-input-1").value = state.wins[0] || "";
+        document.getElementById("win-input-2").value = state.wins[1] || "";
+        document.getElementById("win-input-3").value = state.wins[2] || "";
+        document.getElementById("reflection-journal").value = state.journal || "";
+    }
+
+    function setupGlobalEventListeners() {
+        // Set up input triggers for tracking array variables
+        document.getElementById("win-input-1").addEventListener("input", (e) => { state.wins[0] = e.target.value; triggerAutoSave(); });
+        document.getElementById("win-input-2").addEventListener("input", (e) => { state.wins[1] = e.target.value; triggerAutoSave(); });
+        document.getElementById("win-input-3").addEventListener("input", (e) => { state.wins[2] = e.target.value; triggerAutoSave(); });
+        document.getElementById("reflection-journal").addEventListener("input", (e) => { state.journal = e.target.value; triggerAutoSave(); });
+    }
+</script>
+</body>
+</html>
